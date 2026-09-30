@@ -1,9 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   getProgress,
   toggleProgress,
 } from "../api/progress";
+
+import {
+  getResourcesByTopic,
+} from "../api/resources";
 
 
 function TopicItem({
@@ -15,10 +19,15 @@ function TopicItem({
   const [expanded, setExpanded] = useState(false);
   const [updating, setUpdating] = useState(false);
 
+  const [resources, setResources] = useState([]);
+  const [resourcesLoading, setResourcesLoading] = useState(false);
+  const [resourcesLoaded, setResourcesLoaded] = useState(false);
+
   const hasChildren =
     topic.children && topic.children.length > 0;
 
-  const isCompleted = completedTopics.has(topic.title);
+  const isCompleted =
+    completedTopics.has(topic.title);
 
 
   async function handleToggle() {
@@ -36,10 +45,48 @@ function TopicItem({
       );
 
       onProgressChange(result);
+
     } catch (error) {
-      console.error("Failed to update progress:", error);
+      console.error(
+        "Failed to update progress:",
+        error
+      );
+
     } finally {
       setUpdating(false);
+    }
+  }
+
+
+  async function handleExpand() {
+    const nextExpanded = !expanded;
+
+    setExpanded(nextExpanded);
+
+    if (
+      nextExpanded &&
+      !resourcesLoaded
+    ) {
+      try {
+        setResourcesLoading(true);
+
+        const data =
+          await getResourcesByTopic(
+            topic.title
+          );
+
+        setResources(data);
+        setResourcesLoaded(true);
+
+      } catch (error) {
+        console.error(
+          "Failed to load resources:",
+          error
+        );
+
+      } finally {
+        setResourcesLoading(false);
+      }
     }
   }
 
@@ -51,9 +98,7 @@ function TopicItem({
 
         <div
           className="topic-info"
-          onClick={() =>
-            hasChildren && setExpanded(!expanded)
-          }
+          onClick={handleExpand}
         >
 
           {hasChildren && (
@@ -75,7 +120,9 @@ function TopicItem({
             </h4>
 
             {topic.description && (
-              <p>{topic.description}</p>
+              <p>
+                {topic.description}
+              </p>
             )}
 
           </div>
@@ -85,7 +132,9 @@ function TopicItem({
 
         <button
           className={`progress-button ${
-            isCompleted ? "completed" : ""
+            isCompleted
+              ? "completed"
+              : ""
           }`}
           onClick={handleToggle}
           disabled={updating}
@@ -100,26 +149,144 @@ function TopicItem({
       </div>
 
 
-      {expanded && hasChildren && (
-        <div className="topic-children">
+      {expanded && (
 
-          {topic.children
-            .sort((a, b) => a.order - b.order)
-            .map((child) => (
-              <TopicItem
-                key={`${topic.title}-${child.title}`}
-                topic={child}
-                roadmapId={roadmapId}
-                completedTopics={completedTopics}
-                onProgressChange={onProgressChange}
-              />
-            ))}
+        <div className="topic-content">
+
+          {/* Child Topics */}
+
+          {hasChildren && (
+            <div className="topic-children">
+
+              {topic.children
+                .sort(
+                  (a, b) =>
+                    a.order - b.order
+                )
+                .map((child) => (
+
+                  <TopicItem
+                    key={`${topic.title}-${child.title}`}
+                    topic={child}
+                    roadmapId={roadmapId}
+                    completedTopics={
+                      completedTopics
+                    }
+                    onProgressChange={
+                      onProgressChange
+                    }
+                  />
+
+                ))}
+
+            </div>
+          )}
+
+
+          {/* Resources */}
+
+          <div className="resources">
+
+            <h5>
+              Learning Resources
+            </h5>
+
+
+            {resourcesLoading && (
+              <p className="resource-status">
+                Loading resources...
+              </p>
+            )}
+
+
+            {!resourcesLoading &&
+              resources.length === 0 && (
+                <p className="resource-status">
+                  No resources available yet.
+                </p>
+              )}
+
+
+            {!resourcesLoading &&
+              resources.length > 0 && (
+
+                <div className="resource-list">
+
+                  {resources.map(
+                    (resource) => (
+
+                      <a
+                        key={resource.id}
+                        href={resource.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="resource-card"
+                      >
+
+                        <div className="resource-icon">
+                          {getResourceIcon(
+                            resource.resource_type
+                          )}
+                        </div>
+
+                        <div className="resource-info">
+
+                          <strong>
+                            {resource.title}
+                          </strong>
+
+                          <p>
+                            {resource.description}
+                          </p>
+
+                          <span>
+                            {resource.resource_type}
+                          </span>
+
+                        </div>
+
+                      </a>
+
+                    )
+                  )}
+
+                </div>
+
+              )}
+
+          </div>
 
         </div>
+
       )}
 
     </div>
   );
+}
+
+
+function getResourceIcon(type) {
+
+  switch (type.toLowerCase()) {
+
+    case "documentation":
+      return "📘";
+
+    case "tutorial":
+      return "📖";
+
+    case "article":
+      return "📝";
+
+    case "video":
+      return "🎥";
+
+    case "practice":
+      return "💻";
+
+    default:
+      return "🔗";
+  }
 }
 
 
@@ -130,77 +297,88 @@ function RoadmapCard({ roadmap }) {
 
 
   /*
-   * Load saved progress from backend
-   * whenever the roadmap is loaded.
+   * Load saved progress.
    */
-  useEffect(() => {
 
-    async function loadProgress() {
+  useState(() => {
+    loadProgress();
+  });
 
-      try {
 
-        const progress = await getProgress(
+  async function loadProgress() {
+
+    try {
+
+      const progress =
+        await getProgress(
           "demo-user",
           roadmap.id
         );
 
-        const completed = new Set(
+      const completed =
+        new Set(
           progress
-            .filter((item) => item.completed)
-            .map((item) => item.topic_title)
+            .filter(
+              (item) =>
+                item.completed
+            )
+            .map(
+              (item) =>
+                item.topic_title
+            )
         );
 
-        setCompletedTopics(completed);
+      setCompletedTopics(
+        completed
+      );
 
-      } catch (error) {
+    } catch (error) {
 
-        console.error(
-          "Failed to load progress:",
-          error
-        );
-
-      }
+      console.error(
+        "Failed to load progress:",
+        error
+      );
 
     }
-
-    loadProgress();
-
-  }, [roadmap.id]);
-
-
-  /*
-   * Update local React state after
-   * progress is changed in the backend.
-   */
-  function handleProgressChange(progress) {
-
-    setCompletedTopics((previous) => {
-
-      const updated = new Set(previous);
-
-      if (progress.completed) {
-
-        updated.add(progress.topic_title);
-
-      } else {
-
-        updated.delete(progress.topic_title);
-
-      }
-
-      return updated;
-
-    });
-
   }
 
 
-  /*
-   * Count every topic including
-   * nested child topics.
-   */
+  function handleProgressChange(
+    progress
+  ) {
+
+    setCompletedTopics(
+      (previous) => {
+
+        const updated =
+          new Set(previous);
+
+        if (
+          progress.completed
+        ) {
+
+          updated.add(
+            progress.topic_title
+          );
+
+        } else {
+
+          updated.delete(
+            progress.topic_title
+          );
+
+        }
+
+        return updated;
+      }
+    );
+  }
+
+
   const totalTopics =
-    countTopics(roadmap.topics);
+    countTopics(
+      roadmap.topics
+    );
 
 
   const completedCount =
@@ -211,14 +389,14 @@ function RoadmapCard({ roadmap }) {
     totalTopics === 0
       ? 0
       : Math.round(
-          (completedCount / totalTopics) * 100
+          (completedCount /
+            totalTopics) *
+            100
         );
 
 
   return (
     <section className="roadmap-card">
-
-      {/* Roadmap Header */}
 
       <div className="roadmap-header">
 
@@ -234,15 +412,12 @@ function RoadmapCard({ roadmap }) {
 
         </div>
 
-
         <span className="topic-count">
           {totalTopics} topics
         </span>
 
       </div>
 
-
-      {/* Progress */}
 
       <div className="progress-section">
 
@@ -264,7 +439,8 @@ function RoadmapCard({ roadmap }) {
           <div
             className="progress-fill"
             style={{
-              width: `${progressPercentage}%`,
+              width:
+                `${progressPercentage}%`,
             }}
           />
 
@@ -278,19 +454,22 @@ function RoadmapCard({ roadmap }) {
       </div>
 
 
-      {/* Topics */}
-
       <div className="roadmap-topics">
 
         {roadmap.topics
-          .sort((a, b) => a.order - b.order)
+          .sort(
+            (a, b) =>
+              a.order - b.order
+          )
           .map((topic) => (
 
             <TopicItem
               key={topic.title}
               topic={topic}
               roadmapId={roadmap.id}
-              completedTopics={completedTopics}
+              completedTopics={
+                completedTopics
+              }
               onProgressChange={
                 handleProgressChange
               }
@@ -305,20 +484,14 @@ function RoadmapCard({ roadmap }) {
 }
 
 
-/*
- * Recursively count topics and
- * nested child topics.
- */
 function countTopics(topics) {
 
   let count = 0;
 
   for (const topic of topics) {
 
-    // Count current topic
     count += 1;
 
-    // Count child topics
     if (topic.children?.length) {
 
       count += countTopics(
@@ -326,7 +499,6 @@ function countTopics(topics) {
       );
 
     }
-
   }
 
   return count;

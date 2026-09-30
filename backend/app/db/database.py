@@ -4,6 +4,8 @@ from app.models.progress import Progress
 from app.core.config import settings
 from app.models.user import User
 from app.models.roadmap import Roadmap
+from app.models.resource import Resource
+
 
 client = AsyncMongoClient(settings.mongodb_url)
 
@@ -23,6 +25,7 @@ async def init_database():
             User,
             Roadmap,
             Progress,
+            Resource,
         ],
     )
 
