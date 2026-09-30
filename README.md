@@ -73,6 +73,21 @@ DevPath AI is a full-stack learning platform inspired by the idea of developer r
 - [x] Frontend → Backend → MongoDB integration
 - [x] Display users on frontend
 
+## Day 3 — Roadmap System
+
+- [x] Roadmap model
+- [x] Nested topic structure
+- [x] Roadmap schemas
+- [x] Roadmap repository
+- [x] Roadmap service
+- [x] Roadmap API
+- [x] Roadmap seed script
+- [x] Backend Development roadmap
+- [x] Roadmap API testing
+- [x] React roadmap API integration
+- [x] Interactive roadmap UI
+- [x] Expandable roadmap topics
+
 ---
 
 # 🗺️ Project Roadmap
@@ -87,10 +102,10 @@ DevPath AI is a full-stack learning platform inspired by the idea of developer r
 
 ### Core Platform
 
-- [ ] Roadmap system
-- [ ] Topic system
+- [x] Roadmap system
+- [x] Topic system
 - [ ] Resource system
-- [ ] Interactive roadmap UI
+- [x] Interactive roadmap UI
 - [ ] Progress tracking
 - [ ] User dashboard
 
@@ -158,37 +173,48 @@ DevPath AI is a full-stack learning platform inspired by the idea of developer r
 # 🏗️ Architecture
 
 ```text
-                    ┌──────────────────┐
-                    │     React UI     │
-                    │      Vite        │
-                    └────────┬─────────┘
-                             │
-                             ▼
-                    ┌──────────────────┐
-                    │     FastAPI      │
-                    │      API         │
-                    └────────┬─────────┘
-                             │
-              ┌──────────────┼──────────────┐
-              ▼              ▼              ▼
-       ┌────────────┐ ┌────────────┐ ┌────────────┐
-       │  Services  │ │ Repository │ │ AI Layer   │
-       │            │ │   Layer    │ │ LangGraph  │
-       └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
-             │              │              │
-             └──────────────┼──────────────┘
-                            ▼
-                     ┌─────────────┐
-                     │   MongoDB   │
-                     └─────────────┘
-                            │
-                            ▼
-                  ┌──────────────────┐
-                  │ MongoDB Vector   │
-                  │     Search       │
-                  └──────────────────┘
+                         ┌──────────────────┐
+                         │     React UI     │
+                         │      Vite        │
+                         └────────┬─────────┘
+                                  │
+                                  │ HTTP / REST
+                                  ▼
+                         ┌──────────────────┐
+                         │     FastAPI      │
+                         │       API        │
+                         └────────┬─────────┘
+                                  │
+                ┌─────────────────┼─────────────────┐
+                │                 │                 │
+                ▼                 ▼                 ▼
+        ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+        │   Services   │  │ Repository   │  │   AI Layer   │
+        │    Layer     │  │    Layer     │  │   LangGraph  │
+        └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+               │                 │                 │
+               └─────────────────┼─────────────────┘
+                                 │
+                                 ▼
+                         ┌──────────────────┐
+                         │     MongoDB      │
+                         │  Primary Store   │
+                         └────────┬─────────┘
+                                  │
+                                  ▼
+                         ┌──────────────────┐
+                         │ MongoDB Vector   │
+                         │     Search       │
+                         └──────────────────┘
 
-                    Redis
-                      │
-                      ▼
-              Background Workers
+
+                         ┌──────────────────┐
+                         │      Redis       │
+                         │ Cache / Queue    │
+                         └────────┬─────────┘
+                                  │
+                                  ▼
+                         ┌──────────────────┐
+                         │ Background       │
+                         │ Workers          │
+                         └──────────────────┘
