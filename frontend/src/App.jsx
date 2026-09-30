@@ -1,34 +1,37 @@
 import { useEffect, useState } from "react";
 
-const API_URL = "http://127.0.0.1:8000/api/v1";
+import { getRoadmaps } from "./api/roadmaps";
+import RoadmapCard from "./components/RoadmapCard";
+
+import "./index.css";
+
 
 function App() {
-  const [users, setUsers] = useState([]);
+  const [roadmaps, setRoadmaps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetch(`${API_URL}/users/`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch users");
-        }
 
-        return response.json();
-      })
-      .then((data) => {
-        setUsers(data);
-      })
-      .catch((error) => {
+  useEffect(() => {
+    async function loadRoadmaps() {
+      try {
+        const data = await getRoadmaps();
+
+        setRoadmaps(data);
+      } catch (error) {
         setError(error.message);
-      })
-      .finally(() => {
+      } finally {
         setLoading(false);
-      });
+      }
+    }
+
+    loadRoadmaps();
   }, []);
+
 
   return (
     <div className="app">
+
       <header className="navbar">
         <h1>DevPath AI</h1>
 
@@ -37,40 +40,66 @@ function App() {
         </span>
       </header>
 
+
       <main className="container">
+
         <section className="hero">
-          <h2>Welcome to DevPath AI</h2>
+          <span className="eyebrow">
+            LEARNING ROADMAPS
+          </span>
+
+          <h2>
+            Build your developer journey.
+          </h2>
 
           <p>
-            Your personalized developer learning journey.
+            Follow structured learning paths and
+            understand what to learn next.
           </p>
         </section>
 
-        <section className="card">
-          <h2>Users</h2>
 
-          {loading && <p>Loading users...</p>}
+        <section>
 
-          {error && <p className="error">{error}</p>}
-
-          {!loading && !error && users.length === 0 && (
-            <p>No users found.</p>
-          )}
-
-          {!loading && !error && users.length > 0 && (
-            <div className="users">
-              {users.map((user) => (
-                <div className="user-card" key={user.id}>
-                  <h3>{user.name}</h3>
-                  <p>{user.email}</p>
-                </div>
-              ))}
+          {loading && (
+            <div className="card">
+              <p>Loading roadmaps...</p>
             </div>
           )}
+
+
+          {error && (
+            <div className="card error-card">
+              <p>{error}</p>
+            </div>
+          )}
+
+
+          {!loading &&
+            !error &&
+            roadmaps.length === 0 && (
+              <div className="card">
+                <p>No roadmaps available.</p>
+              </div>
+            )}
+
+
+          {!loading &&
+            !error &&
+            roadmaps.map((roadmap) => (
+              <RoadmapCard
+                key={roadmap.id}
+                roadmap={roadmap}
+              />
+            ))}
+
         </section>
+
       </main>
+
     </div>
   );
 }
+
 
 export default App;
