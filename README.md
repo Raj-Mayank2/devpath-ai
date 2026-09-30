@@ -88,6 +88,21 @@ DevPath AI is a full-stack learning platform inspired by the idea of developer r
 - [x] Interactive roadmap UI
 - [x] Expandable roadmap topics
 
+## Day 4 — Progress Tracking
+
+- [x] Progress model
+- [x] Progress schemas
+- [x] Progress repository
+- [x] Progress service
+- [x] Progress API
+- [x] Create progress record
+- [x] Toggle topic completion
+- [x] Load saved progress from MongoDB
+- [x] Mark topics as completed from React
+- [x] Persist progress across page refreshes
+- [x] Calculate roadmap completion percentage
+- [x] Display learning progress in the UI
+
 ---
 
 # 🗺️ Project Roadmap
@@ -106,7 +121,7 @@ DevPath AI is a full-stack learning platform inspired by the idea of developer r
 - [x] Topic system
 - [ ] Resource system
 - [x] Interactive roadmap UI
-- [ ] Progress tracking
+- [x] Progress tracking
 - [ ] User dashboard
 
 ### Authentication
@@ -185,17 +200,17 @@ DevPath AI is a full-stack learning platform inspired by the idea of developer r
                          │       API        │
                          └────────┬─────────┘
                                   │
-                ┌─────────────────┼─────────────────┐
-                │                 │                 │
-                ▼                 ▼                 ▼
-        ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-        │   Services   │  │ Repository   │  │   AI Layer   │
-        │    Layer     │  │    Layer     │  │   LangGraph  │
-        └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
-               │                 │                 │
-               └─────────────────┼─────────────────┘
-                                 │
-                                 ▼
+                 ┌────────────────┼────────────────┐
+                 │                │                │
+                 ▼                ▼                ▼
+          ┌────────────┐   ┌────────────┐   ┌────────────┐
+          │  Services  │   │ Repository │   │  AI Layer  │
+          │    Layer   │   │   Layer    │   │  LangGraph │
+          └──────┬─────┘   └──────┬─────┘   └──────┬─────┘
+                 │                │                │
+                 └────────────────┼────────────────┘
+                                  │
+                                  ▼
                          ┌──────────────────┐
                          │     MongoDB      │
                          │  Primary Store   │
@@ -208,13 +223,13 @@ DevPath AI is a full-stack learning platform inspired by the idea of developer r
                          └──────────────────┘
 
 
-                         ┌──────────────────┐
-                         │      Redis       │
-                         │ Cache / Queue    │
-                         └────────┬─────────┘
-                                  │
-                                  ▼
-                         ┌──────────────────┐
-                         │ Background       │
-                         │ Workers          │
-                         └──────────────────┘
+              ┌──────────────────┐
+              │      Redis       │
+              │  Cache / Queue   │
+              └────────┬─────────┘
+                       │
+                       ▼
+              ┌──────────────────┐
+              │ Background       │
+              │ Workers          │
+              └──────────────────┘
