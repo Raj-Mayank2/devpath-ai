@@ -1,6 +1,6 @@
 from pymongo import AsyncMongoClient
 from beanie import init_beanie
-
+from app.models.progress import Progress
 from app.core.config import settings
 from app.models.user import User
 from app.models.roadmap import Roadmap
@@ -21,7 +21,9 @@ async def init_database():
         database=database,
         document_models=[
             User,
-            Roadmap,],
+            Roadmap,
+            Progress,
+        ],
     )
 
     print("Beanie initialized")
