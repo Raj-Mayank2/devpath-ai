@@ -1,30 +1,74 @@
 import { useEffect, useState } from "react";
 
+const API_URL = "http://127.0.0.1:8000/api/v1";
+
 function App() {
-  const [backendStatus, setBackendStatus] = useState("Checking...");
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/v1/health")
-      .then((response) => response.json())
-      .then((data) => {
-        setBackendStatus(data.status);
+    fetch(`${API_URL}/users/`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch users");
+        }
+
+        return response.json();
       })
-      .catch(() => {
-        setBackendStatus("Backend unavailable");
+      .then((data) => {
+        setUsers(data);
+      })
+      .catch((error) => {
+        setError(error.message);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, []);
 
   return (
-    <div>
-      <h1>DevPath AI</h1>
+    <div className="app">
+      <header className="navbar">
+        <h1>DevPath AI</h1>
 
-      <p>
-        AI-powered developer learning platform
-      </p>
+        <span className="badge">
+          Developer Learning Platform
+        </span>
+      </header>
 
-      <p>
-        Backend status: <strong>{backendStatus}</strong>
-      </p>
+      <main className="container">
+        <section className="hero">
+          <h2>Welcome to DevPath AI</h2>
+
+          <p>
+            Your personalized developer learning journey.
+          </p>
+        </section>
+
+        <section className="card">
+          <h2>Users</h2>
+
+          {loading && <p>Loading users...</p>}
+
+          {error && <p className="error">{error}</p>}
+
+          {!loading && !error && users.length === 0 && (
+            <p>No users found.</p>
+          )}
+
+          {!loading && !error && users.length > 0 && (
+            <div className="users">
+              {users.map((user) => (
+                <div className="user-card" key={user.id}>
+                  <h3>{user.name}</h3>
+                  <p>{user.email}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   );
 }
