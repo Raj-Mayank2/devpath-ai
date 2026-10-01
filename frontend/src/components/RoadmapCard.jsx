@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   getProgress,
@@ -39,7 +39,6 @@ function TopicItem({
       setUpdating(true);
 
       const result = await toggleProgress(
-        "demo-user",
         roadmapId,
         topic.title
       );
@@ -158,7 +157,7 @@ function TopicItem({
           {hasChildren && (
             <div className="topic-children">
 
-              {topic.children
+              {[...topic.children]
                 .sort(
                   (a, b) =>
                     a.order - b.order
@@ -297,12 +296,13 @@ function RoadmapCard({ roadmap }) {
 
 
   /*
-   * Load saved progress.
+   * Load saved progress for
+   * the currently authenticated user.
    */
 
-  useState(() => {
+  useEffect(() => {
     loadProgress();
-  });
+  }, [roadmap.id]);
 
 
   async function loadProgress() {
@@ -311,7 +311,6 @@ function RoadmapCard({ roadmap }) {
 
       const progress =
         await getProgress(
-          "demo-user",
           roadmap.id
         );
 
@@ -456,7 +455,7 @@ function RoadmapCard({ roadmap }) {
 
       <div className="roadmap-topics">
 
-        {roadmap.topics
+        {[...roadmap.topics]
           .sort(
             (a, b) =>
               a.order - b.order

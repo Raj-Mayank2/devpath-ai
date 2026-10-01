@@ -4,7 +4,6 @@ from pydantic import BaseModel
 
 
 class ProgressCreate(BaseModel):
-    user_id: str
     roadmap_id: str
     topic_title: str
 

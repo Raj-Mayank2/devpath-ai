@@ -3,9 +3,9 @@ from pydantic import EmailStr
 
 
 class User(Document):
-    name:str
-    email:EmailStr
-
+    name: str
+    email: EmailStr
+    password_hash: str
 
     class Settings:
-        name="users"
+        name = "users"

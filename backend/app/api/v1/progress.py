@@ -1,9 +1,8 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
-from app.schemas.progress import (
-    ProgressCreate,
-    ProgressResponse,
-)
+from app.core.dependencies import get_current_user
+from app.models.user import User
+from app.schemas.progress import ProgressCreate, ProgressResponse
 from app.services.progress_service import ProgressService
 
 
@@ -15,15 +14,7 @@ router = APIRouter(
 progress_service = ProgressService()
 
 
-@router.post(
-    "/toggle",
-    response_model=ProgressResponse,
-    status_code=status.HTTP_200_OK,
-)
-async def toggle_progress(data: ProgressCreate):
-
-    progress = await progress_service.toggle_topic(data)
-
+def progress_to_response(progress):
     return ProgressResponse(
         id=str(progress.id),
         user_id=progress.user_id,
@@ -34,28 +25,37 @@ async def toggle_progress(data: ProgressCreate):
     )
 
 
+@router.post(
+    "/toggle",
+    response_model=ProgressResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def toggle_progress(
+    data: ProgressCreate,
+    current_user: User = Depends(get_current_user),
+):
+    progress = await progress_service.toggle_topic(
+        user_id=str(current_user.id),
+        data=data,
+    )
+
+    return progress_to_response(progress)
+
+
 @router.get(
-    "/{user_id}/{roadmap_id}",
+    "/{roadmap_id}",
     response_model=list[ProgressResponse],
 )
 async def get_progress(
-    user_id: str,
     roadmap_id: str,
+    current_user: User = Depends(get_current_user),
 ):
-
     progress = await progress_service.get_progress(
-        user_id=user_id,
+        user_id=str(current_user.id),
         roadmap_id=roadmap_id,
     )
 
     return [
-        ProgressResponse(
-            id=str(item.id),
-            user_id=item.user_id,
-            roadmap_id=item.roadmap_id,
-            topic_title=item.topic_title,
-            completed=item.completed,
-            completed_at=item.completed_at,
-        )
+        progress_to_response(item)
         for item in progress
     ]
