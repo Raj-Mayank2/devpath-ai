@@ -289,7 +289,7 @@ function getResourceIcon(type) {
 }
 
 
-function RoadmapCard({ roadmap }) {
+function RoadmapCard({ roadmap, onProgressChange,}) {
 
   const [completedTopics, setCompletedTopics] =
     useState(new Set());
@@ -342,37 +342,23 @@ function RoadmapCard({ roadmap }) {
   }
 
 
-  function handleProgressChange(
-    progress
-  ) {
+  function handleProgressChange(progress) {
+  setCompletedTopics((previous) => {
+    const updated = new Set(previous);
 
-    setCompletedTopics(
-      (previous) => {
+    if (progress.completed) {
+      updated.add(progress.topic_title);
+    } else {
+      updated.delete(progress.topic_title);
+    }
 
-        const updated =
-          new Set(previous);
+    return updated;
+  });
 
-        if (
-          progress.completed
-        ) {
-
-          updated.add(
-            progress.topic_title
-          );
-
-        } else {
-
-          updated.delete(
-            progress.topic_title
-          );
-
-        }
-
-        return updated;
-      }
-    );
+  if (onProgressChange) {
+    onProgressChange(progress);
   }
-
+}
 
   const totalTopics =
     countTopics(

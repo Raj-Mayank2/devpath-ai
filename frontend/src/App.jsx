@@ -13,7 +13,7 @@ import {
 } from "./api/roadmaps";
 
 import Register from "./components/Register";
-
+import Dashboard from "./components/Dashboard";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -21,6 +21,8 @@ function App() {
   const [showRegister, setShowRegister] = useState(false);
   const [roadmaps, setRoadmaps] = useState([]);
   const [loadingRoadmaps, setLoadingRoadmaps] = useState(false);
+  const [progressVersion, setProgressVersion] =
+    useState(0);
 
 
   useEffect(() => {
@@ -75,12 +77,12 @@ function App() {
 
 
   function handleLogout() {
-  logoutUser();
+    logoutUser();
 
-  setUser(null);
-  setRoadmaps([]);
-  setShowRegister(false);
-}
+    setUser(null);
+    setRoadmaps([]);
+    setShowRegister(false);
+  }
 
 
   if (loadingUser) {
@@ -94,26 +96,26 @@ function App() {
 
   if (!user) {
 
-  if (showRegister) {
+    if (showRegister) {
+      return (
+        <Register
+          onRegister={handleLogin}
+          onSwitchToLogin={() =>
+            setShowRegister(false)
+          }
+        />
+      );
+    }
+
     return (
-      <Register
-        onRegister={handleLogin}
-        onSwitchToLogin={() =>
-          setShowRegister(false)
+      <Login
+        onLogin={handleLogin}
+        onSwitchToRegister={() =>
+          setShowRegister(true)
         }
       />
     );
   }
-
-  return (
-    <Login
-      onLogin={handleLogin}
-      onSwitchToRegister={() =>
-        setShowRegister(true)
-      }
-    />
-  );
-}
 
   return (
     <div className="app">
@@ -148,7 +150,10 @@ function App() {
 
 
       <main className="app-content">
-
+        <Dashboard
+          user={user}
+          refreshKey={progressVersion}
+        />
         <div className="page-heading">
 
           <h2>
