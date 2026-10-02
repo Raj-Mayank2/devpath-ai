@@ -437,10 +437,10 @@ function AIMentor({
 
         try {
             const data = await sendAIMessage(
-                text,
-                roadmapId,
-                topicTitle
-            );
+  text,
+  roadmapId,
+  topicTitle
+);
 
             setMessages((previous) => [
                 ...previous,

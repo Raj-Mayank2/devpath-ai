@@ -11,4 +11,6 @@ class AIState(TypedDict):
     roadmap_context: str
     progress_context: str
 
+    conversation_history:list[dict]
+
     response: str

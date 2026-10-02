@@ -264,6 +264,7 @@ async def generate_response(state: AIState) -> AIState:
     user_message = state["user_message"]
     roadmap_context = state["roadmap_context"]
     progress_context = state["progress_context"]
+    conversation_history = state["conversation_history"]
 
     system_prompt = SYSTEM_PROMPT.format(
         roadmap_context=roadmap_context or "No roadmap information available.",
@@ -272,8 +273,17 @@ async def generate_response(state: AIState) -> AIState:
 
     messages = [
         ("system", system_prompt),
-        ("human", user_message),
     ]
+
+    for message in conversation_history:
+        messages.append(
+            (
+                message["role"],
+                message["content"],
+            )
+        )
+
+    messages.append(("human", user_message))
 
     response = await llm.ainvoke(messages)
 
