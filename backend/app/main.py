@@ -8,6 +8,7 @@ from app.api.v1.roadmaps import router as roadmaps_router
 from app.api.v1.resources import router as resources_router
 from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.auth import router as auth_router
+from app.api.v1.ai import router as ai_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_database()
@@ -39,7 +40,7 @@ app.include_router(
     prefix="/api/v1",
 )
 app.include_router(auth_router, prefix="/api/v1")
-
+app.include_router(ai_router, prefix="/api/v1")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],

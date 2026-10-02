@@ -4,6 +4,7 @@ import RoadmapCanvas from "./components/roadmap/RoadmapCanvas";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
+import AIMentor from "./components/AIMentor";
 import Navbar from "./components/layout/Navbar";
 
 import { getCurrentUser, logoutUser } from "./api/auth";
@@ -30,6 +31,7 @@ function App() {
         setLoadingUser(false);
       }
     }
+
     loadUser();
   }, []);
 
@@ -47,6 +49,7 @@ function App() {
         setLoadingRoadmaps(false);
       }
     }
+
     loadRoadmaps();
   }, [user]);
 
@@ -82,8 +85,14 @@ function App() {
 
   /* Open a roadmap from the dashboard */
   function handleOpenRoadmap(roadmapId) {
-    const match = roadmaps.find((r) => String(r.id) === String(roadmapId));
-    if (match) setSelectedRoadmapId(match.id);
+    const match = roadmaps.find(
+      (roadmap) => String(roadmap.id) === String(roadmapId)
+    );
+
+    if (match) {
+      setSelectedRoadmapId(match.id);
+    }
+
     handleNavigation("roadmaps");
   }
 
@@ -95,7 +104,10 @@ function App() {
           <div className="mx-auto mb-4 flex h-12 w-12 animate-pulse items-center justify-center rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-900 text-base font-bold text-white shadow-lg shadow-indigo-900/20">
             D
           </div>
-          <p className="text-sm font-medium text-slate-500">Loading DevPath AI...</p>
+
+          <p className="text-sm font-medium text-slate-500">
+            Loading DevPath AI...
+          </p>
         </div>
       </div>
     );
@@ -111,6 +123,7 @@ function App() {
         />
       );
     }
+
     return (
       <Login
         onLogin={handleLogin}
@@ -150,8 +163,10 @@ function App() {
                 <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                   Your roadmaps
                 </h1>
+
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">
-                  Select a topic to read about it, then mark it complete to track your progress.
+                  Select a topic to read about it, then mark it complete to
+                  track your progress.
                 </p>
               </div>
 
@@ -164,10 +179,13 @@ function App() {
                   >
                     Learning path
                   </label>
+
                   <select
                     id="roadmap-select"
                     value={selectedRoadmapId}
-                    onChange={(event) => setSelectedRoadmapId(event.target.value)}
+                    onChange={(event) =>
+                      setSelectedRoadmapId(event.target.value)
+                    }
                     className="w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm outline-none transition hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
                   >
                     {roadmaps.map((roadmap) => (
@@ -184,14 +202,21 @@ function App() {
               <div className="flex min-h-[300px] items-center justify-center rounded-3xl border border-slate-200 bg-white shadow-sm">
                 <div className="text-center">
                   <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600" />
-                  <p className="text-sm font-medium text-slate-500">Loading roadmaps...</p>
+
+                  <p className="text-sm font-medium text-slate-500">
+                    Loading roadmaps...
+                  </p>
                 </div>
               </div>
             ) : roadmaps.length === 0 ? (
               <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
-                <h2 className="text-lg font-semibold text-slate-900">No roadmaps yet</h2>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  No roadmaps yet
+                </h2>
+
                 <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500">
-                  Your learning paths will show up here as soon as one is added.
+                  Your learning paths will show up here as soon as one is
+                  added.
                 </p>
               </div>
             ) : (
@@ -205,6 +230,9 @@ function App() {
             )}
           </section>
         )}
+
+        {/* AI Mentor */}
+        {activePage === "ai-mentor" && <AIMentor />}
       </main>
     </div>
   );

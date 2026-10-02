@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   BookOpen,
+  Bot,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -22,6 +23,11 @@ function Navbar({ user, activePage = "dashboard", onNavigate, onLogout }) {
       id: "roadmaps",
       label: "Roadmaps",
       icon: Route,
+    },
+    {
+      id: "ai-mentor",
+      label: "AI Mentor",
+      icon: Bot,
     },
   ];
 
@@ -65,7 +71,7 @@ function Navbar({ user, activePage = "dashboard", onNavigate, onLogout }) {
 
             <div className="text-left">
               <div className="text-[15px] font-bold tracking-tight text-slate-950">
-                DevPath
+                PathForge
                 <span className="text-blue-600"> AI</span>
               </div>
 
@@ -112,6 +118,7 @@ function Navbar({ user, activePage = "dashboard", onNavigate, onLogout }) {
                 <p className="max-w-[150px] truncate text-sm font-semibold text-slate-800">
                   {user?.name || "Developer"}
                 </p>
+
                 <p className="max-w-[150px] truncate text-xs text-slate-400">
                   {user?.email || ""}
                 </p>
@@ -180,6 +187,7 @@ function Navbar({ user, activePage = "dashboard", onNavigate, onLogout }) {
                   <p className="truncate text-sm font-semibold text-slate-800">
                     {user?.name}
                   </p>
+
                   <p className="truncate text-xs text-slate-400">
                     {user?.email}
                   </p>
