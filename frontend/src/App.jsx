@@ -17,6 +17,7 @@ function App() {
   const [roadmaps, setRoadmaps] = useState([]);
   const [loadingRoadmaps, setLoadingRoadmaps] = useState(false);
   const [selectedRoadmapId, setSelectedRoadmapId] = useState("");
+  const [selectedTopicTitle, setSelectedTopicTitle] = useState("");
   const [progressVersion, setProgressVersion] = useState(0);
   const [activePage, setActivePage] = useState("dashboard");
 
@@ -82,7 +83,9 @@ function App() {
   function handleProgressChange() {
     setProgressVersion((previous) => previous + 1);
   }
-
+  function handleTopicSelect(topic) {
+  setSelectedTopicTitle(topic?.title || "");
+}
   /* Open a roadmap from the dashboard */
   function handleOpenRoadmap(roadmapId) {
     const match = roadmaps.find(
@@ -225,6 +228,7 @@ function App() {
                   key={selectedRoadmap.id}
                   roadmap={selectedRoadmap}
                   onProgressChange={handleProgressChange}
+                  onTopicSelect={handleTopicSelect}
                 />
               )
             )}
@@ -232,7 +236,13 @@ function App() {
         )}
 
         {/* AI Mentor */}
-        {activePage === "ai-mentor" && <AIMentor />}
+        {activePage === "ai-mentor" && (
+  <AIMentor
+    roadmapId={selectedRoadmap?.id || ""}
+    roadmapTitle={selectedRoadmap?.title || ""}
+    topicTitle={selectedTopicTitle}
+  />
+)}
       </main>
     </div>
   );

@@ -19,7 +19,10 @@ async def chat_with_ai(
     data: AIChatRequest,
     current_user: User = Depends(get_current_user),
 ):
-    response = await ai_service.chat(data)
+    response = await ai_service.chat(
+    user_id=str(current_user.id),
+    data=data,
+)
 
     return AIChatResponse(
         response=response,

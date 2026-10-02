@@ -2,6 +2,8 @@ from langchain_groq import ChatGroq
 
 from app.ai.state import AIState
 from app.core.config import settings
+from app.models.roadmap import Roadmap
+from app.models.progress import Progress
 
 
 llm = ChatGroq(
@@ -35,6 +37,32 @@ respects the learner's time.
 6. Assume the reader is a motivated beginner to intermediate developer. Define
    jargon the first time you use it.
 
+# Developer Learning Context
+
+You have access to information about the developer's current learning journey.
+
+Use this information when it is relevant to the user's question.
+
+ROADMAP CONTEXT:
+{roadmap_context}
+
+PROGRESS CONTEXT:
+{progress_context}
+
+Important rules for developer context:
+
+- Use the roadmap context to understand what the developer is currently learning.
+- Use the progress context to understand completed and incomplete topics.
+- Do not invent progress or roadmap information.
+- Do not claim the developer completed something unless the context explicitly
+  says so.
+- If the context is empty or does not contain enough information, answer normally.
+- If the user asks what they should learn next, use their incomplete roadmap topics
+  when available.
+- If the user asks about a topic they have already completed, acknowledge that
+  context when useful and focus on deeper understanding.
+- Keep the answer focused on the user's actual question.
+
 # Formatting rules
 
 The answer is rendered as Markdown in a chat window. Use only the following:
@@ -42,8 +70,8 @@ The answer is rendered as Markdown in a chat window. Use only the following:
 - `##` headings for the main sections of longer answers. Skip headings entirely
   for short answers. Never use a top-level `#` heading.
 - **Bold** for key terms and important warnings. Use it sparingly.
-- Bullet lists (`-`) for related points, and numbered lists (`1.`) for steps or
-  ordered flows. Keep each item to one or two lines.
+- Bullet lists (`-`) for related points, and numbered lists (`1.`) for steps
+  or ordered flows. Keep each item to one or two lines.
 - `inline code` for function names, variables, commands, file names and values.
 - Fenced code blocks for any code of more than one line, always with a language
   tag such as ```python, ```javascript, ```sql or ```bash. Keep examples short,
@@ -92,11 +120,158 @@ Learning guidance ("What should I learn next?", "How do I get better at X?"):
 """
 
 
+async def load_user_context(state: AIState) -> AIState:
+    user_id = state["user_id"]
+    roadmap_id = state["roadmap_id"]
+
+    # Load only the selected roadmap when one is provided.
+    if roadmap_id:
+        roadmap = await Roadmap.get(roadmap_id)
+        roadmaps = [roadmap] if roadmap else []
+    else:
+        # Fallback for normal AI chat without a selected roadmap.
+        roadmaps = await Roadmap.find_all().to_list()
+
+    progress_records = await Progress.find(
+        Progress.user_id == user_id
+    ).to_list()
+
+    completed_topics = {
+        progress.topic_title
+        for progress in progress_records
+        if progress.completed
+    }
+
+    roadmap_lines = []
+    progress_lines = []
+
+    total_topics = 0
+    completed_count = 0
+
+    for roadmap in roadmaps:
+        if not roadmap:
+            continue
+
+        roadmap_lines.append(f"Roadmap: {roadmap.title}")
+        roadmap_lines.append(
+            f"Description: {roadmap.description}"
+        )
+
+        roadmap_topics = []
+
+        def collect_topics(topics):
+            for topic in topics:
+                roadmap_topics.append(topic)
+
+                if topic.children:
+                    collect_topics(topic.children)
+
+        collect_topics(roadmap.topics)
+
+        roadmap_completed = 0
+
+        for topic in roadmap_topics:
+            total_topics += 1
+
+            if topic.title in completed_topics:
+                roadmap_completed += 1
+                completed_count += 1
+
+        roadmap_percentage = (
+            round(
+                (roadmap_completed / len(roadmap_topics)) * 100
+            )
+            if roadmap_topics
+            else 0
+        )
+
+        roadmap_lines.append(
+            f"Progress: {roadmap_completed}/"
+            f"{len(roadmap_topics)} topics completed "
+            f"({roadmap_percentage}%)"
+        )
+
+        roadmap_lines.append("Topics:")
+
+        for topic in roadmap_topics:
+            status = (
+                "COMPLETED"
+                if topic.title in completed_topics
+                else "INCOMPLETE"
+            )
+
+            roadmap_lines.append(
+                f"- {topic.title} [{status}]"
+            )
+
+        roadmap_lines.append("")
+
+    overall_percentage = (
+        round(
+            (completed_count / total_topics) * 100
+        )
+        if total_topics
+        else 0
+    )
+
+    progress_lines.append(
+        f"Overall progress: {completed_count}/"
+        f"{total_topics} topics completed "
+        f"({overall_percentage}%)"
+    )
+
+    if completed_topics:
+        progress_lines.append("")
+        progress_lines.append("Completed topics:")
+
+        for topic in sorted(completed_topics):
+            progress_lines.append(f"- {topic}")
+
+    incomplete_topics = []
+
+    for roadmap in roadmaps:
+        if not roadmap:
+            continue
+
+        roadmap_topics = []
+
+        def collect_topics(topics):
+            for topic in topics:
+                roadmap_topics.append(topic)
+
+                if topic.children:
+                    collect_topics(topic.children)
+
+        collect_topics(roadmap.topics)
+
+        for topic in roadmap_topics:
+            if topic.title not in completed_topics:
+                incomplete_topics.append(topic.title)
+
+    if incomplete_topics:
+        progress_lines.append("")
+        progress_lines.append("Incomplete topics:")
+
+        for topic in incomplete_topics:
+            progress_lines.append(f"- {topic}")
+
+    return {
+        **state,
+        "roadmap_context": "\n".join(roadmap_lines),
+        "progress_context": "\n".join(progress_lines),
+    }
 async def generate_response(state: AIState) -> AIState:
     user_message = state["user_message"]
+    roadmap_context = state["roadmap_context"]
+    progress_context = state["progress_context"]
+
+    system_prompt = SYSTEM_PROMPT.format(
+        roadmap_context=roadmap_context or "No roadmap information available.",
+        progress_context=progress_context or "No progress information available.",
+    )
 
     messages = [
-        ("system", SYSTEM_PROMPT),
+        ("system", system_prompt),
         ("human", user_message),
     ]
 
